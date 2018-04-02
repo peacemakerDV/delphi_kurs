@@ -1,0 +1,126 @@
+unit Unit1;
+{$mode objfpc}{$H+}
+interface
+uses
+  Classes, SysUtils, FileUtil, TAGraph, TASources, TARadialSeries, TASeries,
+  Forms, Controls, Graphics, Dialogs, Grids, StdCtrls, Math;
+type
+  { TForm1 }
+  TForm1 = class(TForm)
+    Button1: TButton;  //кнопка "Расчет матрицы А"
+    Button2: TButton;  //кнопка "Расчет вектора Х"
+    Button3: TButton;  //кнопка "Расчет функции G"
+    Button4: TButton;  //кнопка "Построение графика X[i]"
+    Chart1: TChart;    //график зависимости X[i]
+    Chart1LineSeries1: TLineSeries;//график зависимости X[i]
+    Edit1: TEdit;      //окно вывода значения G
+    Label1: TLabel;    //надпись "Элементы матрицы А"
+    Label2: TLabel;    //надпись "Элементы вектора Х"
+    Label3: TLabel;    //надпись "Значение функции G"
+    Label4: TLabel;    //надпись "График зависимости X[i]"
+    Memo1: TMemo;      //окно вывода элементов вектора Х
+    StringGrid1: TStringGrid; //окно вывода элементов матрицы А
+    procedure Button1Click(Sender: TObject);
+    procedure Button2Click(Sender: TObject);
+    procedure Button3Click(Sender: TObject);
+    procedure Button4Click(Sender: TObject);
+  private
+    { private declarations }
+  public
+    { public declarations }
+  end;
+const n=5; //объявление константы, характеризующей размер массива
+var
+  Form1: TForm1;
+implementation
+{$R *.lfm}
+{ TForm1 }
+
+
+
+//процедура расчета матрицы А
+procedure TForm1.Button1Click(Sender: TObject);
+var
+ a: array [1..n,1..n] of real; //объявление массива
+ i,j: integer;                 //объявление счетчиков
+begin
+ for i:= 1 to n do             //счетчик строк
+  for j:= 1 to n do            //счетчик столбцов
+   //формула для расчета элементов матрицы А
+   a[i,j]:=power(4,(-i-j))*power(3,(i+j))*cos((i*Pi)/6);
+ for i:= 1 to n do             //счетчик строк
+  for j:= 1 to n do            //счетчик столбцов
+   //вывод значений матрицы А в поле StringGrid
+   StringGrid1.Cells[j-1,i-1]:=FloatToStrF(a[i,j],ffFixed,5,5);
+end;
+
+
+
+//процедура расчета элементов вектора Х
+procedure TForm1.Button2Click(Sender: TObject);
+var
+ a: array [1..n,1..n] of real; //объявление массива
+ i,j,z: integer;               //обявление счетчиков
+ min: real;                    //объявление минимального значения
+begin
+ for i:=1 to n do              //счетчик строк
+  for j:=1 to n do             //счетчик столбцов
+   //ввод массива из матрицы А
+   a[i,j]:=StrToFloat(StringGrid1.Cells[j-1,i-1]);
+ //задание минимального значения квадрата первого элемента
+ min:=power(a[1,1],2);
+ for i:=1 to n do   //счетчик строк
+  for j:=1 to n do  //счетчик столбцов
+   //сравнение минимального квадрата элемента с текущим квадратом элемента
+   if min>power(a[i,j],2)
+    then      //если истинно
+     begin
+      //присвоение минимального значения квадрата текущего элемента
+      min:=power(a[i,j],2);
+      //запоминание столбца матрицы А
+      z:=j;
+     end;
+ for i:= 1 to n do  //счетчик строк
+  //вывод столбца матрицы А в поле Memo
+  Memo1.Lines[i-1]:=FloatToStr(a[i,z]);
+end;
+
+
+
+//процедура расчета функции G
+procedure TForm1.Button3Click(Sender: TObject);
+var
+   x: array [1..n] of real; //объявление массива
+   i,k: integer;            //объявление счетчиков
+   s,p,g: real; //объявление суммы, произведения и функции
+begin
+   s:=0;        //обнуление суммы
+   for i:=1 to n do  //массив для извлечения из Memo элементов вектора Х
+       x[i]:=StrToFloat(Memo1.Lines[i-1]);
+   for i:=1 to n do  //массив для расчета суммы
+       p:=1;         //присвоение произведению 1
+       begin
+            for k:=1 to i do //массив для расчета произведения
+   	        p:=p*(1+x[k]); //формула для расчета произведения
+            s:=s+(x[i]-2)/p;   //формула для расчета суммы
+       end;
+   g:=4*ln(abs(s));  //формула для расчета функции
+   Edit1.text:=FloatToStrF(g,ffFixed,5,5);  //вывод функции в поле Edit
+end;
+
+
+
+//процедура построения графика зависимости X[i]
+procedure TForm1.Button4Click(Sender: TObject);
+var
+    x: array [1..n] of real; //объявление массива
+    i: integer; //объявление счетчика
+begin
+for i:=1 to n do //массив для извлечения из Memo элементов вектора Х
+    x[i]:=StrToFloat(Memo1.Lines[i-1]);
+for i:=1 to n do      //массив для построения графика
+    Chart1LineSeries1.AddXY(i,x[i],'',clBlack);
+
+
+end;
+end.                         
